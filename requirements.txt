@@ -4,4 +4,5 @@ opencv-python
 pillow
 numpy
 rembg
+onnxruntime
 
