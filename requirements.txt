@@ -1,1 +1,5 @@
+flask
 gunicorn
+opencv-python
+pillow
+numpy
