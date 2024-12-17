@@ -90,66 +90,70 @@ def remove_bg_api():
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
+    if file and file.filename.lower().endswith(('png', 'jpg', 'jpeg')):
+        # Process the image to remove the background
+        input_data = file.read()
+        output_data = remove_bg(input_data)
 
-    # Process the image to remove the background
-    input_data = file.read()
-    output_data = remove_bg(input_data)
+        # Save the output image in the static folder (output)
+        output_path = os.path.join(output_dir, file.filename)
+        with open(output_path, 'wb') as output_file:
+            output_file.write(output_data)
 
-    # Save the output image in the static folder (output)
-    output_path = os.path.join(output_dir, file.filename)
-    with open(output_path, 'wb') as output_file:
-        output_file.write(output_data)
+        # Ensure the URL path to the output image is correct
+        output_file_url = url_for('static', filename=f'output/{file.filename}')
 
-    # Ensure the URL path to the output image is correct
-    output_file_url = url_for('static', filename=f'output/{file.filename}')
-
-    # Display a simple download link for the processed image
-    return render_template_string("""
-    <!doctype html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Image Background Removed</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: #f4f7fc;
-                text-align: center;
-                padding: 50px;
-            }
-            h1 {
-                color: #4A90E2;
-                font-size: 36px;
-            }
-            p {
-                color: #7a7a7a;
-                font-size: 18px;
-            }
-            a {
-                display: inline-block;
-                background-color: #4A90E2;
-                color: white;
-                padding: 15px 30px;
-                font-size: 18px;
-                text-decoration: none;
-                border-radius: 5px;
-                margin-top: 20px;
-                transition: background-color 0.3s ease;
-            }
-            a:hover {
-                background-color: #357ab7;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Background Removed Successfully!</h1>
-        <p>You can download the processed image below:</p>
-        <a href="{{ output_file_url }}" download>Download Image</a>
-        <img src="{{ output_file_url }}" alt="Processed Image" style="margin-top: 20px; width: 50%;"/>
-    </body>
-    </html>
-    """, output_file_url=output_file_url)
+        # Display a simple download link for the processed image
+        return render_template_string("""
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Image Background Removed</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background: #f4f7fc;
+                    text-align: center;
+                    padding: 50px;
+                }
+                h1 {
+                    color: #4A90E2;
+                    font-size: 36px;
+                }
+                p {
+                    color: #7a7a7a;
+                    font-size: 18px;
+                }
+                a {
+                    display: inline-block;
+                    background-color: #4A90E2;
+                    color: white;
+                    padding: 15px 30px;
+                    font-size: 18px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                    transition: background-color 0.3s ease;
+                }
+                a:hover {
+                    background-color: #357ab7;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Background Removed Successfully!</h1>
+            <p>You can download the processed image below:</p>
+            <a href="{{ output_file_url }}" download>Download Image</a>
+            <img src="{{ output_file_url }}" alt="Processed Image" style="margin-top: 20px; width: 50%;"/>
+        </body>
+        </html>
+        """, output_file_url=output_file_url)
+    else:
+        return jsonify({"error": "Invalid file type. Only PNG, JPG, or JPEG are allowed."}), 400
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Dynamically get the port from the environment variables for Render deployment
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 if PORT is not set
+    app.run(debug=True, host='0.0.0.0', port=port)
